@@ -1,0 +1,98 @@
+import tkinter as tk
+from tkinter import ttk
+from camera import Camera
+from attendance import AttendanceManager
+from notifications import NotificationManager
+
+class UserInterface:
+    def __init__(self, root, database, security):
+        self.root = root
+        self.database = database
+        self.security = security
+        self.camera = Camera()
+        self.attendance_manager = AttendanceManager(database)
+        self.notification_manager = NotificationManager(api_url="https://api.whatsapp.com/send", api_key="YOUR_API_KEY")
+        self.create_main_interface()
+
+    def create_main_interface(self):
+        self.main_frame = tk.Frame(self.root)
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
+
+        self.create_camera_view()
+        self.create_student_list()
+        self.create_control_buttons()
+
+    def create_camera_view(self):
+        self.camera_frame = tk.Frame(self.main_frame)
+        self.camera_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.camera_label = tk.Label(self.camera_frame)
+        self.camera_label.pack(fill=tk.BOTH, expand=True)
+
+        self.update_camera_view()
+
+    def update_camera_view(self):
+        ret, frame = self.camera.capture.read()
+        if ret:
+            processed_frame = self.camera.process_frame(frame)
+            self.camera_label.imgtk = processed_frame
+            self.camera_label.configure(image=processed_frame)
+        self.root.after(10, self.update_camera_view)
+
+    def create_student_list(self):
+        self.student_list_frame = tk.Frame(self.main_frame)
+        self.student_list_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+        self.student_list = ttk.Treeview(self.student_list_frame, columns=("ID", "Name", "Status"), show="headings")
+        self.student_list.heading("ID", text="ID")
+        self.student_list.heading("Name", text="Name")
+        self.student_list.heading("Status", text="Status")
+        self.student_list.pack(fill=tk.BOTH, expand=True)
+
+        self.load_student_list()
+
+    def load_student_list(self):
+        students = self.database.get_all_students()
+        for student in students:
+            self.student_list.insert("", "end", values=(student["id"], student["name"], student["status"]))
+
+    def create_control_buttons(self):
+        self.control_frame = tk.Frame(self.main_frame)
+        self.control_frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+        self.start_button = tk.Button(self.control_frame, text="Iniciar sesión de asistencia", command=self.start_attendance_session)
+        self.start_button.pack(side=tk.LEFT, padx=5, pady=5)
+
+        self.pause_button = tk.Button(self.control_frame, text="Pausar", command=self.pause_attendance_session)
+        self.pause_button.pack(side=tk.LEFT, padx=5, pady=5)
+
+        self.stop_button = tk.Button(self.control_frame, text="Finalizar sesión", command=self.stop_attendance_session)
+        self.stop_button.pack(side=tk.LEFT, padx=5, pady=5)
+
+    def start_attendance_session(self):
+        self.attendance_manager.start_session()
+
+    def pause_attendance_session(self):
+        self.attendance_manager.pause_session()
+
+    def stop_attendance_session(self):
+        self.attendance_manager.stop_session()
+
+    def update_student_status(self, student_id, status):
+        self.attendance_manager.mark_attendance(student_id, status)
+        self.load_student_list()
+
+    def send_notification(self, phone_number, template, student_name):
+        self.notification_manager.send_notification(phone_number, template, student_name)
+
+    def view_notification_history(self):
+        history = self.notification_manager.get_notification_history()
+        for record in history:
+            print(f"{record['timestamp']}: {record['phone_number']} - {record['message']}")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    database = Database("asisto_ya.db")
+    security = Security()
+    ui = UserInterface(root, database, security)
+    root.mainloop()
