@@ -1,0 +1,11 @@
+opencv-python-headless
+yolov5
+numpy
+pandas
+flask
+sqlalchemy
+twilio
+python-dotenv
+openpyxl
+reportlab
+cryptography
