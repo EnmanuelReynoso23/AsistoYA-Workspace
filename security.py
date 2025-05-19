@@ -2,6 +2,8 @@ import hashlib
 import os
 import base64
 from cryptography.fernet import Fernet
+import pyotp
+import time
 
 class Security:
     def __init__(self):
@@ -44,9 +46,11 @@ class Security:
         return [item for item in data if current_time - item['timestamp'] <= retention_period]
 
     def enable_two_factor_authentication(self, user):
-        # Placeholder for enabling two-factor authentication
-        pass
+        secret = pyotp.random_base32()
+        user.two_factor_secret = secret
+        user.save()
+        return secret
 
     def verify_two_factor_code(self, user, code):
-        # Placeholder for verifying two-factor authentication code
-        pass
+        totp = pyotp.TOTP(user.two_factor_secret)
+        return totp.verify(code)

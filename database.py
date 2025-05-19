@@ -73,3 +73,7 @@ class Database:
     def restore_database(self, backup_file):
         with sqlite3.connect(backup_file) as bck:
             bck.backup(self.conn)
+
+    def close_connection(self):
+        if self.conn:
+            self.conn.close()

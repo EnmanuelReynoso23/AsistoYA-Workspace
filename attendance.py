@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import datetime
+from fpdf import FPDF
 
 class AttendanceManager:
     def __init__(self, database):
@@ -19,5 +20,26 @@ class AttendanceManager:
         report.to_excel(file_path, index=False)
 
     def export_report_to_pdf(self, report, file_path):
-        # Placeholder for PDF export functionality
-        pass
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+
+        # Add a title
+        pdf.cell(200, 10, txt="Attendance Report", ln=True, align="C")
+
+        # Add column headers
+        pdf.cell(40, 10, txt="Student ID", border=1)
+        pdf.cell(40, 10, txt="Date", border=1)
+        pdf.cell(40, 10, txt="Time", border=1)
+        pdf.cell(40, 10, txt="Status", border=1)
+        pdf.ln()
+
+        # Add data rows
+        for index, row in report.iterrows():
+            pdf.cell(40, 10, txt=str(row["Student ID"]), border=1)
+            pdf.cell(40, 10, txt=row["Date"], border=1)
+            pdf.cell(40, 10, txt=row["Time"], border=1)
+            pdf.cell(40, 10, txt=row["Status"], border=1)
+            pdf.ln()
+
+        pdf.output(file_path)

@@ -1,10 +1,13 @@
 import cv2
+import numpy as np
+import torch
 
 class Camera:
     def __init__(self, source=0):
         self.source = source
         self.capture = cv2.VideoCapture(self.source)
         self.configure_camera()
+        self.model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
 
     def configure_camera(self):
         # Adjust lighting and contrast settings
@@ -30,8 +33,17 @@ class Camera:
         cv2.destroyAllWindows()
 
     def process_frame(self, frame):
-        # Placeholder for frame processing logic
-        # This could include face detection/recognition using OpenCV or YOLOv8
+        # Convert frame to RGB
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Perform face detection/recognition using YOLOv5
+        results = self.model(rgb_frame)
+
+        # Draw bounding boxes on the frame
+        for result in results.xyxy[0]:
+            x1, y1, x2, y2, conf, cls = result
+            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+
         return frame
 
 if __name__ == "__main__":
