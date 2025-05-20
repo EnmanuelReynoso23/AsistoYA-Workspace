@@ -4,6 +4,9 @@ from ttkbootstrap.constants import *
 from camera import Camera
 from attendance import AttendanceManager
 from notifications import NotificationManager
+from tkinter import Menu
+from tkinter import messagebox
+from tkinter import ttk as tk
 
 class UserInterface:
     def __init__(self, root, database, security):
@@ -14,6 +17,8 @@ class UserInterface:
         self.attendance_manager = AttendanceManager(database)
         self.notification_manager = NotificationManager(api_url="https://api.whatsapp.com/send", api_key="YOUR_API_KEY")
         self.create_main_interface()
+        self.create_tooltips()
+        self.create_context_menu()
 
     def create_main_interface(self):
         self.main_frame = ttk.Frame(self.root)
@@ -90,6 +95,49 @@ class UserInterface:
         history = self.notification_manager.get_notification_history()
         for record in history:
             print(f"{record['timestamp']}: {record['phone_number']} - {record['message']}")
+
+    def create_tooltips(self):
+        self.tooltips = {
+            self.start_button: "Start the attendance session",
+            self.pause_button: "Pause the attendance session",
+            self.stop_button: "Stop the attendance session"
+        }
+        for widget, text in self.tooltips.items():
+            widget.bind("<Enter>", lambda e, t=text: self.show_tooltip(e, t))
+            widget.bind("<Leave>", self.hide_tooltip)
+
+    def show_tooltip(self, event, text):
+        x, y, _, _ = event.widget.bbox("insert")
+        x += event.widget.winfo_rootx() + 25
+        y += event.widget.winfo_rooty() + 25
+        self.tooltip = tk.Toplevel(event.widget)
+        self.tooltip.wm_overrideredirect(True)
+        self.tooltip.wm_geometry(f"+{x}+{y}")
+        label = ttk.Label(self.tooltip, text=text, background="yellow", relief="solid", borderwidth=1)
+        label.pack()
+
+    def hide_tooltip(self, event):
+        if self.tooltip:
+            self.tooltip.destroy()
+
+    def create_context_menu(self):
+        self.context_menu = Menu(self.root, tearoff=0)
+        self.context_menu.add_command(label="Edit", command=self.edit_student)
+        self.context_menu.add_command(label="Delete", command=self.delete_student)
+        self.student_list.bind("<Button-3>", self.show_context_menu)
+
+    def show_context_menu(self, event):
+        self.context_menu.post(event.x_root, event.y_root)
+
+    def edit_student(self):
+        selected_item = self.student_list.selection()[0]
+        student_id = self.student_list.item(selected_item, "values")[0]
+        # Implement the edit functionality here
+
+    def delete_student(self):
+        selected_item = self.student_list.selection()[0]
+        student_id = self.student_list.item(selected_item, "values")[0]
+        # Implement the delete functionality here
 
 if __name__ == "__main__":
     root = ttk.Window(themename="cosmo")

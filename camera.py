@@ -46,6 +46,10 @@ class Camera:
 
         return frame
 
+    def improve_performance(self):
+        # Use more advanced models or techniques to improve performance and accuracy
+        self.model = torch.hub.load('ultralytics/yolov5', 'yolov5m')  # Use a more advanced model
+
 if __name__ == "__main__":
     camera = Camera()
     camera.start_capture()
