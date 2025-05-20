@@ -43,3 +43,9 @@ class AttendanceManager:
             pdf.ln()
 
         pdf.output(file_path)
+
+    def edit_attendance_record(self, record_id, new_status):
+        self.database.update_attendance_record(record_id, new_status)
+
+    def delete_attendance_record(self, record_id):
+        self.database.delete_attendance_record(record_id)

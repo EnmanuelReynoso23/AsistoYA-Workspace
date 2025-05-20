@@ -53,6 +53,14 @@ To run the application, use the following command:
 python main.py
 ```
 
+## Running the Application with ttkbootstrap
+
+To run the application with `ttkbootstrap`, use the following command:
+
+```bash
+python main.py
+```
+
 ## Contributing to the Project
 
 We welcome contributions to Asisto Ya! To contribute, follow these steps:
