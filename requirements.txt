@@ -9,3 +9,4 @@ python-dotenv
 openpyxl
 reportlab
 cryptography
+ttkbootstrap

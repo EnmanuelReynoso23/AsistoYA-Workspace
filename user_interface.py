@@ -1,5 +1,6 @@
-import tkinter as tk
-from tkinter import ttk
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
+
 from camera import Camera
 from attendance import AttendanceManager
 from notifications import NotificationManager
@@ -15,7 +16,7 @@ class UserInterface:
         self.create_main_interface()
 
     def create_main_interface(self):
-        self.main_frame = tk.Frame(self.root)
+        self.main_frame = ttk.Frame(self.root)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
         self.create_camera_view()
@@ -23,10 +24,10 @@ class UserInterface:
         self.create_control_buttons()
 
     def create_camera_view(self):
-        self.camera_frame = tk.Frame(self.main_frame)
+        self.camera_frame = ttk.Frame(self.main_frame)
         self.camera_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        self.camera_label = tk.Label(self.camera_frame)
+        self.camera_label = ttk.Label(self.camera_frame)
         self.camera_label.pack(fill=tk.BOTH, expand=True)
 
         self.update_camera_view()
@@ -40,7 +41,7 @@ class UserInterface:
         self.root.after(10, self.update_camera_view)
 
     def create_student_list(self):
-        self.student_list_frame = tk.Frame(self.main_frame)
+        self.student_list_frame = ttk.Frame(self.main_frame)
         self.student_list_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
         self.student_list = ttk.Treeview(self.student_list_frame, columns=("ID", "Name", "Status"), show="headings")
@@ -57,16 +58,16 @@ class UserInterface:
             self.student_list.insert("", "end", values=(student["id"], student["name"], student["status"]))
 
     def create_control_buttons(self):
-        self.control_frame = tk.Frame(self.main_frame)
+        self.control_frame = ttk.Frame(self.main_frame)
         self.control_frame.pack(side=tk.BOTTOM, fill=tk.X)
 
-        self.start_button = tk.Button(self.control_frame, text="Iniciar sesión de asistencia", command=self.start_attendance_session)
+        self.start_button = ttk.Button(self.control_frame, text="Iniciar sesión de asistencia", command=self.start_attendance_session)
         self.start_button.pack(side=tk.LEFT, padx=5, pady=5)
 
-        self.pause_button = tk.Button(self.control_frame, text="Pausar", command=self.pause_attendance_session)
+        self.pause_button = ttk.Button(self.control_frame, text="Pausar", command=self.pause_attendance_session)
         self.pause_button.pack(side=tk.LEFT, padx=5, pady=5)
 
-        self.stop_button = tk.Button(self.control_frame, text="Finalizar sesión", command=self.stop_attendance_session)
+        self.stop_button = ttk.Button(self.control_frame, text="Finalizar sesión", command=self.stop_attendance_session)
         self.stop_button.pack(side=tk.LEFT, padx=5, pady=5)
 
     def start_attendance_session(self):
@@ -91,7 +92,7 @@ class UserInterface:
             print(f"{record['timestamp']}: {record['phone_number']} - {record['message']}")
 
 if __name__ == "__main__":
-    root = tk.Tk()
+    root = ttk.Window(themename="cosmo")
     database = Database("asisto_ya.db")
     security = Security()
     ui = UserInterface(root, database, security)
