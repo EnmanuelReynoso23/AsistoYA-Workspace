@@ -2,7 +2,7 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 
 from user_interface import UserInterface
-from database import Database
+# from database import Database
 from security import Security
 from login import LoginScreen
 
@@ -10,9 +10,12 @@ class AsistoYaApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Asisto Ya")
-        self.database = Database()
+        # self.database = Database(
+        #     cred_path="firebase_service_account.json",
+        #     db_url="https://asistoya-demo-default-rtdb.firebaseio.com/"
+        # )
         self.security = Security()
-        self.user_interface = UserInterface(self.root, self.database, self.security)
+        self.user_interface = UserInterface(self.root, None, self.security)
         self.create_login_screen()
 
     def create_login_screen(self):

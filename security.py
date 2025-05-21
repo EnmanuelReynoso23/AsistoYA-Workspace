@@ -9,6 +9,10 @@ class Security:
     def __init__(self):
         self.key = self.load_key()
         self.cipher = Fernet(self.key)
+        # Usuario y contraseña de prueba para desarrollo
+        self.test_users = {
+            "admin": self.hash_password("admin123")
+        }
 
     def load_key(self):
         key_file = "secret.key"
@@ -40,6 +44,12 @@ class Security:
         stored_hash = decoded_password[16:]
         provided_hash = hashlib.pbkdf2_hmac('sha256', provided_password.encode(), salt, 100000)
         return stored_hash == provided_hash
+
+    def authenticate(self, username, password):
+        """Authenticate a user with username and password"""
+        if username in self.test_users:
+            return self.verify_password(self.test_users[username], password)
+        return False
 
     def enforce_data_retention_policy(self, data, retention_period):
         current_time = int(time.time())

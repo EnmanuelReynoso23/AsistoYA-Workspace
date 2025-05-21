@@ -1,79 +1,61 @@
-import sqlite3
-from sqlite3 import Error
+import firebase_admin
+from firebase_admin import credentials, db
 
 class Database:
-    def __init__(self, db_file):
-        self.db_file = db_file
-        self.conn = None
+    def __init__(self, cred_path="firebase_service_account.json", db_url=""):
+        if not firebase_admin._apps:
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred, {
+                'databaseURL': db_url
+            })
+        self.root = db.reference()
 
-    def create_connection(self):
-        try:
-            self.conn = sqlite3.connect(self.db_file)
-        except Error as e:
-            print(e)
+    def add_student(self, name, grade, photo, tutor_contact=None):
+        students_ref = self.root.child("students")
+        new_student = {
+            "name": name,
+            "grade": grade,
+            "photo": photo,
+            "tutor_contact": tutor_contact
+        }
+        student_ref = students_ref.push(new_student)
+        return student_ref.key
 
-    def create_table(self, create_table_sql):
-        try:
-            c = self.conn.cursor()
-            c.execute(create_table_sql)
-        except Error as e:
-            print(e)
-
-    def setup_database(self):
-        self.create_connection()
-        sql_create_students_table = """ CREATE TABLE IF NOT EXISTS students (
-                                            id integer PRIMARY KEY,
-                                            name text NOT NULL,
-                                            grade text,
-                                            photo blob
-                                        ); """
-        sql_create_attendance_table = """ CREATE TABLE IF NOT EXISTS attendance (
-                                            id integer PRIMARY KEY,
-                                            student_id integer NOT NULL,
-                                            date text NOT NULL,
-                                            time text NOT NULL,
-                                            status text NOT NULL,
-                                            FOREIGN KEY (student_id) REFERENCES students (id)
-                                        ); """
-        sql_create_notifications_table = """ CREATE TABLE IF NOT EXISTS notifications (
-                                                id integer PRIMARY KEY,
-                                                template text NOT NULL,
-                                                settings text
-                                            ); """
-        self.create_table(sql_create_students_table)
-        self.create_table(sql_create_attendance_table)
-        self.create_table(sql_create_notifications_table)
-
-    def add_student(self, name, grade, photo):
-        sql = ''' INSERT INTO students(name, grade, photo)
-                  VALUES(?,?,?) '''
-        cur = self.conn.cursor()
-        cur.execute(sql, (name, grade, photo))
-        self.conn.commit()
-        return cur.lastrowid
+    def get_all_students(self):
+        students_ref = self.root.child("students")
+        students = students_ref.get()
+        result = []
+        if students:
+            for key, value in students.items():
+                result.append({
+                    "id": key,
+                    "name": value.get("name"),
+                    "grade": value.get("grade"),
+                    "status": "Sin registro"
+                })
+        return result
 
     def add_attendance_record(self, student_id, date, time, status):
-        sql = ''' INSERT INTO attendance(student_id, date, time, status)
-                  VALUES(?,?,?,?) '''
-        cur = self.conn.cursor()
-        cur.execute(sql, (student_id, date, time, status))
-        self.conn.commit()
-        return cur.lastrowid
+        attendance_ref = self.root.child("attendance")
+        new_record = {
+            "student_id": student_id,
+            "date": date,
+            "time": time,
+            "status": status
+        }
+        record_ref = attendance_ref.push(new_record)
+        return record_ref.key
 
     def get_attendance_records(self, start_date, end_date):
-        cur = self.conn.cursor()
-        cur.execute("SELECT * FROM attendance WHERE date BETWEEN ? AND ?", (start_date, end_date))
-        rows = cur.fetchall()
-        return rows
-
-    def backup_database(self, backup_file):
-        with sqlite3.connect(backup_file) as bck:
-            self.conn.backup(bck)
-
-    def restore_database(self, backup_file):
-        with sqlite3.connect(backup_file) as bck:
-            bck.backup(self.conn)
+        attendance_ref = self.root.child("attendance")
+        records = attendance_ref.order_by_child("date").start_at(start_date).end_at(end_date).get()
+        result = []
+        if records:
+            for key, value in records.items():
+                result.append(value)
+            return result
+        return []
 
     def close_connection(self):
-        if self.conn:
-            self.conn.close()
+        pass  # Not needed for Firebase
+
