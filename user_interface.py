@@ -152,6 +152,8 @@ class UserInterface:
         self.notification_label = None        # Label for displaying notifications
         self.capture_interval = 1000          # Milliseconds between attendance captures
         self.last_capture_time = 0            # Time of last attendance capture
+        self.last_model_training_time = 0     # Time of last face model training
+        self.model_training_interval = 60000  # Train model at most once every 60 seconds
         
         # Create data directories if they don't exist
         os.makedirs("data", exist_ok=True)
