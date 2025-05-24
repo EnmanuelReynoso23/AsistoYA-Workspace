@@ -144,9 +144,7 @@ class UserInterface:
         self.available_cameras = self.list_cameras()
         # --- SchoolManager integration ---
         self.school_manager = SchoolManager()
-        self.active_course_code = None
-        
-        # Configuration properties
+        self.active_course_code = None        # Configuration properties
         self.face_confidence_threshold = 80  # Threshold for face recognition confidence
         self.send_notifications = False       # Whether to send notifications to tutors
         self.notification_label = None        # Label for displaying notifications
@@ -154,6 +152,18 @@ class UserInterface:
         self.last_capture_time = 0            # Time of last attendance capture
         self.last_model_training_time = 0     # Time of last face model training
         self.model_training_interval = 60000  # Train model at most once every 60 seconds
+        
+        # Face recognition performance optimization
+        self.face_recognition_counter = 0
+        self.face_recognition_interval = 3    # Process every 3 frames for better performance
+        self.last_recognized_faces = {}       # Cache recognized faces
+        self.recognition_cooldown = 2.0       # 2 seconds between recognitions for same face
+        
+        # Face recognition performance optimization
+        self.face_recognition_counter = 0
+        self.face_recognition_interval = 3  # Process every 3 frames for better performance
+        self.last_recognized_faces = {}  # Cache recognized faces
+        self.recognition_cooldown = 2.0  # 2 seconds between recognitions for same face
         
         # Create data directories if they don't exist
         os.makedirs("data", exist_ok=True)
@@ -215,10 +225,14 @@ class UserInterface:
         self.create_camera_view()
         self.create_student_list()
         self.create_control_buttons()
-
+        
     def change_camera(self, event=None):
         import cv2
         selected = self.camera_var.get()
+        
+        # Reset face recognition cache when changing cameras
+        self.reset_face_recognition_cache()
+        
         if selected == "Cámara IP...":
             import tkinter.simpledialog as simpledialog
             url = simpledialog.askstring("Cámara IP", "Introduce la URL del stream de la cámara IP (por ejemplo, rtsp o http):")
@@ -226,11 +240,15 @@ class UserInterface:
                 self.camera.capture.release()
                 self.camera.capture = cv2.VideoCapture(url)
                 self.camera_index = url
+                # Reconfigure camera settings for the new source
+                self.camera.configure_camera()
         else:
             idx = int(selected.replace("Cam ", ""))
             self.camera_index = idx
             self.camera.capture.release()
             self.camera.capture = cv2.VideoCapture(self.camera_index)
+            # Reconfigure camera settings for the new source
+            self.camera.configure_camera()
 
     def create_camera_view(self):
         self.camera_frame = ttk.Frame(self.main_frame)
@@ -315,8 +333,8 @@ class UserInterface:
             
         tk.messagebox.showinfo(
             "Éxito", 
-            f"Rostro guardado como {nombre_completo}\nCódigo de estudiante: {code}"
-        )        # Actualizar lista de estudiantes
+            f"Rostro guardado como {nombre_completo}\nCódigo de estudiante: {code}"        )
+        # Actualizar lista de estudiantes
         self.load_student_list()
         
     def update_camera_view(self):
@@ -327,9 +345,21 @@ class UserInterface:
             
             # Get frame from camera
             frame = self.camera.get_frame()
-            if frame is not None:
-                # Make a copy of the frame for display
-                display_frame = frame.copy()
+            if frame is None:
+                # Schedule next update and return early if no frame
+                self.root.after(50, self.update_camera_view)
+                return
+                
+            # Make a copy of the frame for display
+            display_frame = frame.copy()
+            
+            # Increment frame counter for face recognition optimization
+            self.face_recognition_counter += 1
+            current_time = time.time()
+            
+            # Only process face recognition every N frames to improve performance
+            if self.face_recognition_counter >= self.face_recognition_interval:
+                self.face_recognition_counter = 0
                 
                 # Convert to grayscale for face detection
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -343,10 +373,23 @@ class UserInterface:
                 
                 # Process each detected face
                 for (x, y, w, h) in faces:
-                    # Validate minimum face size
-                    if w < 40 or h < 40:
+                    # Validate minimum face size for better accuracy
+                    if w < 50 or h < 50:
                         continue
                         
+                    # Create face identifier for cooldown tracking
+                    face_center = (x + w//2, y + h//2)
+                    face_id = f"{face_center[0]}_{face_center[1]}"
+                    
+                    # Check if this face was recently recognized (cooldown)
+                    if face_id in self.last_recognized_faces:
+                        if current_time - self.last_recognized_faces[face_id] < self.recognition_cooldown:
+                            # Still in cooldown, just draw the cached result
+                            cv2.rectangle(display_frame, (x, y), (x+w, y+h), (0,255,0), 2)
+                            cv2.putText(display_frame, "Reconocido", 
+                                       (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
+                            continue
+                    
                     # Extract and preprocess face
                     face_roi = gray[y:y+h, x:x+w]
                     try:
@@ -357,9 +400,11 @@ class UserInterface:
                         
                     # Recognize face
                     name, conf = face_manager.recognize_face(face_img)
-                    
-                    # Handle recognized faces
+                      # Handle recognized faces
                     if name != "Desconocido" and conf < self.face_confidence_threshold:
+                        # Update cooldown cache
+                        self.last_recognized_faces[face_id] = current_time
+                        
                         # Get student code from face manager
                         student_code = face_manager.get_student_code(name)
                         
@@ -378,13 +423,13 @@ class UserInterface:
                             if self.active_course_code:
                                 # Get current time to determine if late
                                 from datetime import datetime
-                                current_time = datetime.now().time()
+                                current_time_dt = datetime.now().time()
                                 
                                 # Check if course has a late threshold set (default 15 minutes)
                                 status = "Presente"
                                 if hasattr(self.school_manager.courses[self.active_course_code], 'late_threshold'):
                                     late_time = self.school_manager.courses[self.active_course_code].late_threshold
-                                    if current_time > late_time:
+                                    if current_time_dt > late_time:
                                         status = "Tardanza"
                                 
                                 # Mark attendance
@@ -429,8 +474,7 @@ class UserInterface:
                         else:
                             # Already processed, just show name
                             display_name = name
-                            if student_code and student_code in self.school_manager.students:
-                                display_name = self.school_manager.students[student_code].full_name()
+                            if student_code and student_code in self.school_manager.students:                            display_name = self.school_manager.students[student_code].full_name()
                             
                             cv2.putText(display_frame, display_name, 
                                        (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
@@ -444,24 +488,50 @@ class UserInterface:
                 # Update student list if new students were recognized
                 if recognized_students and self.active_course_code:
                     self.load_student_list()
+            else:
+                # When not processing face recognition, just detect and draw rectangles
+                faces = self.camera.detect_faces(frame)
+                for (x, y, w, h) in faces:
+                    if w >= 50 and h >= 50:  # Only draw for valid face sizes
+                        cv2.rectangle(display_frame, (x, y), (x+w, y+h), (255,255,0), 2)
+                        cv2.putText(display_frame, "Procesando...", 
+                                   (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,0), 2)
                 
-                # Add status overlay to the frame
-                self.add_status_overlay(display_frame)
-                
-                # Convert to tkinter-compatible format and display
-                from PIL import Image, ImageTk
-                rgb_frame = cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB)
-                pil_img = Image.fromarray(rgb_frame)
-                tk_img = ImageTk.PhotoImage(image=pil_img)
-                self.camera_label.imgtk = tk_img
-                self.camera_label.configure(image=tk_img)
+            # Add status overlay to the frame
+            self.add_status_overlay(display_frame)
+            
+            # Convert to tkinter-compatible format with optimized processing
+            from PIL import Image, ImageTk
+            
+            # Resize frame for display if too large to improve performance
+            h, w = display_frame.shape[:2]
+            if w > 800:
+                scale = 800 / w
+                new_w = int(w * scale)
+                new_h = int(h * scale)
+                display_frame = cv2.resize(display_frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+            
+            rgb_frame = cv2.cvtColor(display_frame, cv2.COLOR_BGR2RGB)
+            pil_img = Image.fromarray(rgb_frame)
+            
+            # Apply image enhancement for better quality
+            from PIL import ImageEnhance
+            enhancer = ImageEnhance.Sharpness(pil_img)
+            pil_img = enhancer.enhance(1.2)  # Slight sharpening
+            
+            tk_img = ImageTk.PhotoImage(image=pil_img)
+            self.camera_label.imgtk = tk_img
+            self.camera_label.configure(image=tk_img)
+            
         except Exception as e:
             print(f"Error updating camera view: {e}")
             import traceback
             traceback.print_exc()
             
-        # Schedule next update
-        self.root.after(33, self.update_camera_view)  # ~30 FPS
+        # Schedule next update with optimized timing
+        # Use 30ms for smoother video when processing faces, 50ms when not
+        next_update = 30 if self.face_recognition_counter == 0 else 50
+        self.root.after(next_update, self.update_camera_view)
         
     def add_status_overlay(self, frame):
         """Add status information overlay to the camera frame"""
@@ -529,6 +599,24 @@ class UserInterface:
                 self.notification_label = None
         except Exception as e:
             print(f"Error hiding notification: {e}")
+
+    def cleanup_recognition_cache(self):
+        """Clean up old entries from face recognition cache to prevent memory buildup"""
+        current_time = time.time()
+        expired_faces = []
+        
+        for face_id, last_time in self.last_recognized_faces.items():
+            if current_time - last_time > self.recognition_cooldown * 3:  # Remove after 3x cooldown
+                expired_faces.append(face_id)
+        
+        for face_id in expired_faces:
+            del self.last_recognized_faces[face_id]
+    
+    def reset_face_recognition_cache(self):
+        """Reset face recognition cache when switching courses or cameras"""
+        self.last_recognized_faces.clear()
+        self.face_recognition_counter = 0
+        print("Face recognition cache reset")
 
     def create_student_list(self):
         self.student_list_frame = ttk.Frame(self.main_frame)

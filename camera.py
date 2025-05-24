@@ -75,15 +75,31 @@ class Camera:
             return False
 
     def configure_camera(self):
-        """Configure camera properties for optimal face detection"""
+        """Configure camera properties for optimal face detection and image quality"""
         try:
-            # Set resolution for better face detection
-            self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-            # Adjust brightness and contrast for better face visibility
-            self.capture.set(cv2.CAP_PROP_BRIGHTNESS, 128)  # Mid-level brightness
-            self.capture.set(cv2.CAP_PROP_CONTRAST, 128)    # Mid-level contrast
-            print("Camera configured successfully")
+            # Set higher resolution for better image quality
+            self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+            self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+            
+            # Set FPS for smoother video
+            self.capture.set(cv2.CAP_PROP_FPS, 30)
+            
+            # Optimize image quality settings
+            self.capture.set(cv2.CAP_PROP_BRIGHTNESS, 140)  # Slightly brighter
+            self.capture.set(cv2.CAP_PROP_CONTRAST, 130)    # Better contrast
+            self.capture.set(cv2.CAP_PROP_SATURATION, 120)  # Improved color saturation
+            self.capture.set(cv2.CAP_PROP_SHARPNESS, 130)   # Sharper image
+            
+            # Enable auto exposure and focus for better image quality
+            self.capture.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
+            self.capture.set(cv2.CAP_PROP_AUTOFOCUS, 1)
+            
+            # Get actual resolution to verify settings
+            actual_width = self.capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+            actual_height = self.capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+            actual_fps = self.capture.get(cv2.CAP_PROP_FPS)
+            
+            print(f"Camera configured: {actual_width}x{actual_height} @ {actual_fps}fps")
         except Exception as e:
             print(f"Error configuring camera: {e}")
 

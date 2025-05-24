@@ -31,6 +31,7 @@ from dashboard import Dashboard
 from attendance import AttendanceManager
 from notifications import NotificationManager
 from face_recognition_manager import FaceRecognitionManager
+from registration_manager import RegistrationWindow
 import tkinter as tk
 from tkinter import messagebox
 
@@ -80,13 +81,10 @@ class AsistoYaApp:
     def create_menu_bar(self):
         """Create the application menu bar"""
         self.menubar = tk.Menu(self.root)
-        
-        # File menu
+          # File menu
         file_menu = tk.Menu(self.menubar, tearoff=0)
         file_menu.add_command(label="Dashboard", command=self.show_dashboard)
         file_menu.add_command(label="Asistencia", command=self.show_attendance)
-        file_menu.add_separator()
-        file_menu.add_command(label="Configuración", command=self.show_settings)
         file_menu.add_separator()
         file_menu.add_command(label="Cerrar sesión", command=self.logout)
         file_menu.add_command(label="Salir", command=self.exit_app)
@@ -97,6 +95,13 @@ class AsistoYaApp:
         report_menu.add_command(label="Exportar a Excel", command=self.export_excel_report)
         report_menu.add_command(label="Exportar a PDF", command=self.export_pdf_report)
         self.menubar.add_cascade(label="Reportes", menu=report_menu)
+        
+        # Administration menu
+        admin_menu = tk.Menu(self.menubar, tearoff=0)
+        admin_menu.add_command(label="Gestionar Registros", command=self.show_registration_management)
+        admin_menu.add_separator()
+        admin_menu.add_command(label="Configuración de Sistema", command=self.show_settings)
+        self.menubar.add_cascade(label="Administración", menu=admin_menu)
         
         # Help menu
         help_menu = tk.Menu(self.menubar, tearoff=0)
@@ -246,6 +251,15 @@ class AsistoYaApp:
         # Clear existing widgets and show main interface
         self.user_interface.load_main_interface()
         
+    def show_registration_management(self):
+        """Show the registration management window"""
+        try:
+            registration_window = RegistrationWindow(self.root, self.security, self.school_manager)
+            registration_window.show()
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al abrir la gestión de registros: {str(e)}")
+            print(f"Error al mostrar gestión de registros: {e}")
+    
     def show_settings(self):
         """Show settings dialog"""
         messagebox.showinfo("Configuración", "Configuración avanzada de AsistoYA.\nFuncionalidad en desarrollo.")
