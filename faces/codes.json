@@ -1,1 +1,5 @@
-{"Enmanuel Reynoso": "ER3163"}
+{
+  "status": "ARCHIVO OBSOLETO - ELIMINADO",
+  "replacement": "El sistema ahora usa el nuevo módulo face_recognition/",
+  "note": "Los códigos se generan automáticamente en el nuevo sistema"
+}

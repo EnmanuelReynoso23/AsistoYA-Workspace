@@ -1,1 +1,5 @@
-{"0": "Enmanuel Reynoso"}
+{
+  "status": "ARCHIVO OBSOLETO - ELIMINADO",
+  "replacement": "El sistema ahora usa labels_map.pkl en el nuevo módulo face_recognition/",
+  "note": "Las etiquetas se manejan automáticamente en el nuevo sistema"
+}

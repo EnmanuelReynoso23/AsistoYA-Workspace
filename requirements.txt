@@ -1,14 +1,23 @@
-opencv-python>=4.8.0
-numpy>=1.24.0
-pandas>=2.0.0
-matplotlib>=3.7.0
-fpdf>=1.7.2
-ttkbootstrap>=1.10.0
-pillow>=10.0.0
-ultralytics>=8.0.0
-torch>=2.0.0
-twilio>=8.0.0
-openpyxl>=3.1.0
-cryptography>=41.0.0
-pyotp>=2.8.0
-requests>=2.30.0
+# AsistoYA - Sistema de Asistencia con Reconocimiento Facial
+# Dependencias principales - Versión mejorada
+
+# OpenCV con contribuciones (incluye LBPH Face Recognizer)
+opencv-contrib-python==4.8.1.78
+
+# Procesamiento numérico y científico
+numpy>=1.21.0
+
+# Manipulación de imágenes
+Pillow>=9.0.0
+
+# Análisis de datos y reportes
+pandas>=1.5.0
+
+# Visualización (opcional para gráficos futuros)
+matplotlib>=3.5.0
+
+# GUI moderna (backup si tkinter no es suficiente)
+# ttkbootstrap>=1.10.0  # Comentado por ahora, usar tkinter nativo
+
+# Utilidades adicionales
+python-dateutil>=2.8.0

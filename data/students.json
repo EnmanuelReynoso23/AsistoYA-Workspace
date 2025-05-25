@@ -1,1 +1,16 @@
-{"EST-ORYAX": {"name": "Enmanuel", "surname": "Reynoso", "email": "", "code": "EST-ORYAX", "courses": [], "faces": []}}
+{
+  "ER001": {
+    "student_id": "ER001",
+    "name": "Enmanuel Reynoso",
+    "face_files": [
+      "ER001_Enmanuel_Reynoso_0.jpg",
+      "ER001_Enmanuel_Reynoso_1.jpg",
+      "ER001_Enmanuel_Reynoso_2.jpg",
+      "ER001_Enmanuel_Reynoso_3.jpg",
+      "ER001_Enmanuel_Reynoso_4.jpg"
+    ],
+    "registration_date": "2025-05-24T22:34:40.971379",
+    "total_attendance": 0,
+    "last_attendance": null
+  }
+}

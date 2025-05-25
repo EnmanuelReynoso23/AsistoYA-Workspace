@@ -1,0 +1,6 @@
+{
+  "status": "ARCHIVO OBSOLETO - ELIMINADO",
+  "replacement": "El sistema ahora usa models/student_model.py para gestionar usuarios",
+  "note": "Los usuarios registrados se manejan en la nueva base de datos JSON",
+  "new_location": "data/students.json"
+}
