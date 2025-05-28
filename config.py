@@ -72,6 +72,7 @@ MAX_CONFIDENCE_THRESHOLD = 95.0
 # Configuraciones de registro
 FACES_PER_STUDENT = 5  # Número de rostros a capturar por estudiante
 FACE_CAPTURE_INTERVAL = 1.0  # Segundos entre capturas
+DEFAULT_RECOGNITION_INTERVAL = 0.1  # Intervalo entre reconocimientos en segundos
 
 # Configuraciones de cooldown
 DEFAULT_ATTENDANCE_COOLDOWN = 30  # Segundos entre registros del mismo estudiante
