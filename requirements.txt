@@ -1,23 +1,31 @@
-# AsistoYA - Sistema de Asistencia con Reconocimiento Facial
-# Dependencias principales - Versión mejorada
+# AsistoYA Enterprise - Dependencias OPTIMIZADAS ⚡
+# Solo dependencias ESENCIALES para máximo rendimiento
 
-# OpenCV con contribuciones (incluye LBPH Face Recognizer)
-opencv-contrib-python==4.8.1.78
+# ===== COMPUTER VISION =====
+opencv-contrib-python==4.8.1.78  # OpenCV con LBPH Face Recognizer
+numpy>=1.21.0                     # Procesamiento numérico
+Pillow>=9.0.0                     # Manipulación de imágenes
 
-# Procesamiento numérico y científico
-numpy>=1.21.0
+# ===== FIREBASE INTEGRATION =====
+firebase-admin>=6.2.0             # Firebase Admin SDK
+google-cloud-firestore>=2.11.0    # Firestore database
+pyfcm>=1.5.4                      # Firebase Cloud Messaging
 
-# Manipulación de imágenes
-Pillow>=9.0.0
+# ===== MODERN GUI =====
+ttkbootstrap>=1.10.0              # GUI moderna y profesional
 
-# Análisis de datos y reportes
-pandas>=1.5.0
+# ===== SECURITY =====
+cryptography>=41.0.0              # Encriptación AES-256
+bcrypt>=4.0.0                     # Hash de contraseñas
+pyjwt>=2.8.0                      # JWT tokens
 
-# Visualización (opcional para gráficos futuros)
-matplotlib>=3.5.0
+# ===== REPORTS =====
+pandas>=1.5.0                     # Análisis de datos
+matplotlib>=3.5.0                 # Gráficos
+openpyxl>=3.1.0                   # Excel
+xlsxwriter>=3.1.0                 # Advanced Excel formatting
+reportlab>=4.0.0                  # PDFs
 
-# GUI moderna (backup si tkinter no es suficiente)
-# ttkbootstrap>=1.10.0  # Comentado por ahora, usar tkinter nativo
-
-# Utilidades adicionales
-python-dateutil>=2.8.0
+# ===== UTILITIES =====
+requests>=2.31.0                  # HTTP requests
+python-dateutil>=2.8.0            # Manejo de fechas

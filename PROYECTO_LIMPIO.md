@@ -8,7 +8,7 @@ Se ha completado exitosamente la eliminación de todas las dependencias de PyTor
 
 ### 📁 Estructura Final del Proyecto
 
-```
+```text
 AsistoYA-Workspace/
 ├── .git/                           # Control de versiones Git
 ├── faces/                          # Directorio para almacenar datos de rostros
@@ -21,7 +21,7 @@ AsistoYA-Workspace/
 
 ### 🔧 Dependencias Actuales
 
-```
+```text
 opencv-contrib-python==4.8.1.78   # OpenCV con LBPH Face Recognizer
 numpy>=1.21.0                     # Operaciones numéricas
 Pillow>=8.0.0                     # Manipulación de imágenes
@@ -33,23 +33,27 @@ ttkbootstrap>=1.10.0              # Interfaz gráfica moderna
 ### 🚀 Cómo Ejecutar la Aplicación
 
 1. **Instalar dependencias:**
+
    ```powershell
    pip install -r requirements.txt
    ```
 
 2. **Verificar el sistema:**
+
    ```powershell
    python verificar_sistema.py
    ```
 
 3. **Ejecutar la aplicación principal:**
+
    ```powershell
    python face_attendance_system.py
    ```
 
 ### 🔄 Cambios Realizados
 
-#### ✅ Eliminaciones Completadas:
+#### ✅ Eliminaciones Completadas
+
 - ❌ PyTorch y todas sus dependencias
 - ❌ YOLO (YOLOv8) y modelos relacionados
 - ❌ 34 archivos obsoletos eliminados
@@ -58,7 +62,8 @@ ttkbootstrap>=1.10.0              # Interfaz gráfica moderna
 - ❌ Scripts de prueba antiguos
 - ❌ Múltiples versiones de requirements.txt
 
-#### ✅ Implementaciones OpenCV:
+#### ✅ Implementaciones OpenCV
+
 - ✅ Detección de rostros con Haar Cascades
 - ✅ Reconocimiento facial con LBPH (Local Binary Patterns Histograms)
 - ✅ Gestión de cámara con OpenCV
@@ -101,7 +106,7 @@ ttkbootstrap>=1.10.0              # Interfaz gráfica moderna
 
 ### 🎉 Estado del Proyecto
 
-**✅ PROYECTO COMPLETAMENTE FUNCIONAL**
+#### ✅ PROYECTO COMPLETAMENTE FUNCIONAL
 
 El sistema AsistoYA ahora ejecuta completamente con OpenCV, sin dependencias de PyTorch o YOLO. La aplicación está lista para uso en producción con todas las funcionalidades principales implementadas.
 
