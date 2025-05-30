@@ -35,12 +35,12 @@ class FirebaseConfig:
         logger.addHandler(handler)
         
         return logger
-    
+        
     def initialize(self):
         """Inicializar Firebase con configuración avanzada"""
         try:
             # Ruta al archivo de credenciales
-            cred_path = Path(__file__).parent / "google-services.json"
+            cred_path = Path(__file__).parent / "firebase-service-account.json"
             
             if not cred_path.exists():
                 raise FileNotFoundError(f"Archivo de credenciales no encontrado: {cred_path}")
