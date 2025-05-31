@@ -21,7 +21,8 @@ class FirebaseConfig:
         self.db = None
         self.bucket = None
         self.logger = self._setup_logger()
-          def _setup_logger(self):
+        
+    def _setup_logger(self):
         """Configurar logging avanzado"""
         logger = logging.getLogger('Firebase')
         logger.setLevel(logging.INFO)
@@ -101,37 +102,84 @@ class FirebaseConfig:
             
             response = messaging.send(message)
             self.logger.info(f"✅ Notificación enviada: {response}")
-            return response
+            return True
             
         except Exception as e:
             self.logger.error(f"❌ Error enviando notificación: {e}")
-            return None
+            return False
     
-    def send_batch_notifications(self, tokens: list, title: str, body: str, data: dict = None):
-        """Enviar notificaciones masivas"""
+    def upload_image(self, image_path: str, remote_path: str) -> str:
+        """Subir imagen a Firebase Storage"""
         try:
-            messages = []
-            for token in tokens:
-                message = messaging.Message(
-                    notification=messaging.Notification(title=title, body=body),
-                    data=data or {},
-                    token=token
-                )
-                messages.append(message)
+            bucket = self.get_storage_bucket()
+            blob = bucket.blob(remote_path)
             
-            response = messaging.send_all(messages)
-            self.logger.info(f"✅ Notificaciones masivas enviadas: {response.success_count}/{len(tokens)}")
-            return response
+            with open(image_path, 'rb') as image_file:
+                blob.upload_from_file(image_file)
+            
+            # Hacer público el archivo
+            blob.make_public()
+            
+            self.logger.info(f"✅ Imagen subida: {remote_path}")
+            return blob.public_url
             
         except Exception as e:
-            self.logger.error(f"❌ Error enviando notificaciones masivas: {e}")
-            return None
+            self.logger.error(f"❌ Error subiendo imagen: {e}")
+            return ""
+    
+    def save_attendance_record(self, record: dict) -> bool:
+        """Guardar registro de asistencia en Firestore"""
+        try:
+            db = self.get_firestore_client()
+            collection_ref = db.collection('attendance_records')
+            doc_ref = collection_ref.add(record)
+            
+            self.logger.info(f"✅ Registro guardado: {doc_ref[1].id}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error guardando registro: {e}")
+            return False
+    
+    def get_attendance_records(self, filters: dict = None) -> list:
+        """Obtener registros de asistencia desde Firestore"""
+        try:
+            db = self.get_firestore_client()
+            collection_ref = db.collection('attendance_records')
+            
+            # Aplicar filtros si se proporcionan
+            query = collection_ref
+            if filters:
+                for field, value in filters.items():
+                    query = query.where(field, '==', value)
+            
+            docs = query.stream()
+            records = []
+            
+            for doc in docs:
+                record = doc.to_dict()
+                record['id'] = doc.id
+                records.append(record)
+            
+            self.logger.info(f"✅ {len(records)} registros obtenidos")
+            return records
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error obteniendo registros: {e}")
+            return []
 
-# Singleton instance
-firebase_config = FirebaseConfig()
+# Instancia global singleton
+_firebase_instance = None
 
-def get_firebase():
-    """Obtener instancia global de Firebase"""
-    if not firebase_config.app:
-        firebase_config.initialize()
-    return firebase_config
+def get_firebase() -> FirebaseConfig:
+    """Obtener instancia singleton de Firebase"""
+    global _firebase_instance
+    if _firebase_instance is None:
+        _firebase_instance = FirebaseConfig()
+    return _firebase_instance
+
+# Función de conveniencia para inicialización
+def initialize_firebase() -> bool:
+    """Inicializar Firebase globalmente"""
+    firebase = get_firebase()
+    return firebase.initialize()

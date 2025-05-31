@@ -21,6 +21,10 @@ try:
     from firebase.firebase_config import get_firebase
     from ui.modern_dashboard import ModernDashboard
     from face_recognition.recognition_system import FaceRecognitionSystem
+    from models.student_model import student_model
+    from models.attendance_model import attendance_model
+    from reports.advanced_reports import get_report_generator
+    from models.user_model import user_model
 except ImportError as e:
     print(f"⚠️ Error importando módulos: {e}")
     print("Instale las dependencias con: pip install -r requirements.txt")
@@ -215,7 +219,7 @@ Roles disponibles:
             token = self.auth_manager.generate_token(user)
             
             # Cerrar login y abrir dashboard
-            self.root.destroy()
+            self.root.withdraw()
             self.open_main_application(user, token)
         else:
             self.hide_loading()
@@ -473,10 +477,14 @@ class AsistoYAEnterprise:
         messagebox.showinfo("Cambiar Contraseña", "Funcionalidad de cambio de contraseña")
     
     def register_student(self):
-        messagebox.showinfo("Registrar", "Módulo de registro de estudiantes")
+        self._show_student_registration_window()
     
     def list_students(self):
-        messagebox.showinfo("Estudiantes", "Lista de estudiantes registrados")
+        try:
+            students = student_model.get_all_students()
+            messagebox.showinfo("Lista de Estudiantes", f"Total de estudiantes registrados: {len(students)}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error obteniendo estudiantes: {str(e)}")
     
     def train_model(self):
         messagebox.showinfo("Entrenar", "Entrenamiento del modelo facial")
@@ -485,7 +493,11 @@ class AsistoYAEnterprise:
         messagebox.showinfo("Reconocimiento", "Iniciando reconocimiento facial")
     
     def view_reports(self):
-        messagebox.showinfo("Reportes", "Visualización de reportes de asistencia")
+        try:
+            report_generator = get_report_generator()
+            messagebox.showinfo("Reportes", "Generador de reportes disponible")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error accediendo a reportes: {str(e)}")
     
     def export_data(self):
         messagebox.showinfo("Exportar", "Exportación de datos")
@@ -555,6 +567,97 @@ Desarrollado con tecnologías avanzadas:
     def run(self):
         """Ejecutar aplicación principal"""
         self.root.mainloop()
+
+    def _show_student_registration_window(self):
+        """Mostrar ventana de registro de estudiante"""
+        register_window = tk.Toplevel(self.root)
+        register_window.title("➕ Registrar Estudiante")
+        register_window.geometry("500x400")
+        register_window.resizable(False, False)
+        
+        register_window.transient(self.root)
+        register_window.grab_set()
+        
+        main_frame = ttk_bootstrap.Frame(register_window, padding=20)
+        main_frame.pack(fill=BOTH, expand=True)
+        
+        # Título
+        title_label = ttk_bootstrap.Label(
+            main_frame,
+            text="➕ Registrar Nuevo Estudiante",
+            font=("Segoe UI", 16, "bold"),
+            bootstyle=PRIMARY
+        )
+        title_label.pack(pady=(0, 20))
+        
+        # Variables
+        name_var = tk.StringVar()
+        email_var = tk.StringVar()
+        grade_var = tk.StringVar()
+        
+        # Formulario
+        form_frame = ttk_bootstrap.LabelFrame(main_frame, text="Información del Estudiante", padding=15)
+        form_frame.pack(fill=X, pady=(0, 20))
+        
+        # Nombre completo
+        ttk_bootstrap.Label(form_frame, text="👤 Nombre Completo:").pack(anchor=W, pady=(0, 5))
+        name_entry = ttk_bootstrap.Entry(form_frame, textvariable=name_var, width=40)
+        name_entry.pack(fill=X, pady=(0, 10))
+        
+        # Email
+        ttk_bootstrap.Label(form_frame, text="📧 Email (opcional):").pack(anchor=W, pady=(0, 5))
+        email_entry = ttk_bootstrap.Entry(form_frame, textvariable=email_var, width=40)
+        email_entry.pack(fill=X, pady=(0, 10))
+        
+        # Grado
+        ttk_bootstrap.Label(form_frame, text="📚 Grado/Curso (opcional):").pack(anchor=W, pady=(0, 5))
+        grade_entry = ttk_bootstrap.Entry(form_frame, textvariable=grade_var, width=40)
+        grade_entry.pack(fill=X, pady=(0, 10))
+        
+        def register_student_action():
+            name = name_var.get().strip()
+            email = email_var.get().strip()
+            grade = grade_var.get().strip()
+            
+            if not name:
+                messagebox.showerror("Error", "El nombre completo es obligatorio")
+                return
+            
+            try:
+                # Registrar estudiante usando el modelo
+                result = student_model.create_student(name, email if email else None, grade if grade else None)
+                
+                if result['success']:
+                    student_id = result['student']['student_id']
+                    messagebox.showinfo("Éxito", f"Estudiante registrado exitosamente\nID: {student_id}\nNombre: {name}")
+                    register_window.destroy()
+                    self.log_info(f"Estudiante registrado: {name} (ID: {student_id})")
+                else:
+                    messagebox.showerror("Error", result.get('message', 'Error desconocido al registrar estudiante'))
+            except Exception as e:
+                messagebox.showerror("Error", f"Error registrando estudiante: {str(e)}")
+                self.log_info(f"Error registrando estudiante: {str(e)}")
+        
+        # Botones
+        buttons_frame = ttk_bootstrap.Frame(main_frame)
+        buttons_frame.pack(fill=X)
+        
+        ttk_bootstrap.Button(
+            buttons_frame,
+            text="✅ Registrar Estudiante",
+            command=register_student_action,
+            bootstyle=SUCCESS
+        ).pack(side=LEFT, padx=(0, 5))
+        
+        ttk_bootstrap.Button(
+            buttons_frame,
+            text="❌ Cancelar",
+            command=register_window.destroy,
+            bootstyle=DANGER
+        ).pack(side=LEFT)
+        
+        # Focus en nombre
+        name_entry.focus()
 
 def main():
     """Función principal"""
