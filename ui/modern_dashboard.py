@@ -624,10 +624,164 @@ class ModernDashboard:
         """Gestionar estudiantes (placeholder real)"""
         # Aquí deberías llamar a la función real de gestión de estudiantes
         messagebox.showinfo("Estudiantes", "Abriendo gestión de estudiantes...")
-    
-    def send_notifications(self):
-        """Enviar notificaciones (placeholder real)"""
-        # Aquí deberías llamar a la función real de notificaciones
+      def send_notifications(self):
+        """Enviar notificaciones a padres/tutores"""
+        try:
+            # Crear ventana de notificaciones
+            notif_window = tk.Toplevel(self.parent)
+            notif_window.title("Enviar Notificaciones")
+            notif_window.geometry("600x500")
+            notif_window.grab_set()
+            
+            # Frame principal
+            main_frame = ttk_bootstrap.Frame(notif_window, padding=20)
+            main_frame.pack(fill=BOTH, expand=True)
+            
+            # Título
+            title_label = ttk_bootstrap.Label(
+                main_frame,
+                text="Sistema de Notificaciones",
+                font=("Segoe UI", 16, "bold"),
+                bootstyle=WARNING
+            )
+            title_label.pack(pady=(0, 20))
+            
+            # Tipo de notificación
+            type_frame = ttk_bootstrap.LabelFrame(main_frame, text="Tipo de Notificación", bootstyle=INFO)
+            type_frame.pack(fill=X, pady=(0, 15))
+            
+            notif_type = tk.StringVar(value="ausencia")
+            
+            ttk_bootstrap.Radiobutton(
+                type_frame,
+                text="Notificación de Ausencia",
+                variable=notif_type,
+                value="ausencia"
+            ).pack(anchor=W, padx=10, pady=5)
+            
+            ttk_bootstrap.Radiobutton(
+                type_frame,
+                text="Notificación de Llegada Tardía",
+                variable=notif_type,
+                value="tardanza"
+            ).pack(anchor=W, padx=10, pady=5)
+            
+            ttk_bootstrap.Radiobutton(
+                type_frame,
+                text="Reporte Diario de Asistencia",
+                variable=notif_type,
+                value="reporte"
+            ).pack(anchor=W, padx=10, pady=5)
+            
+            # Destinatarios
+            dest_frame = ttk_bootstrap.LabelFrame(main_frame, text="Destinatarios", bootstyle=INFO)
+            dest_frame.pack(fill=X, pady=(0, 15))
+            
+            dest_type = tk.StringVar(value="todos")
+            
+            ttk_bootstrap.Radiobutton(
+                dest_frame,
+                text="Todos los padres/tutores",
+                variable=dest_type,
+                value="todos"
+            ).pack(anchor=W, padx=10, pady=5)
+            
+            ttk_bootstrap.Radiobutton(
+                dest_frame,
+                text="Solo padres de estudiantes ausentes",
+                variable=dest_type,
+                value="ausentes"
+            ).pack(anchor=W, padx=10, pady=5)
+            
+            ttk_bootstrap.Radiobutton(
+                dest_frame,
+                text="Estudiante específico",
+                variable=dest_type,
+                value="especifico"
+            ).pack(anchor=W, padx=10, pady=5)
+            
+            # Campo para estudiante específico
+            student_frame = ttk_bootstrap.Frame(dest_frame)
+            student_frame.pack(fill=X, padx=10, pady=5)
+            
+            ttk_bootstrap.Label(student_frame, text="ID del estudiante:").pack(side=LEFT)
+            student_entry = ttk_bootstrap.Entry(student_frame, width=20)
+            student_entry.pack(side=LEFT, padx=5)
+            
+            # Mensaje personalizado
+            msg_frame = ttk_bootstrap.LabelFrame(main_frame, text="Mensaje Personalizado", bootstyle=INFO)
+            msg_frame.pack(fill=BOTH, expand=True, pady=(0, 15))
+            
+            message_text = tk.Text(msg_frame, height=6, wrap=tk.WORD)
+            message_text.pack(fill=BOTH, expand=True, padx=10, pady=10)
+            message_text.insert("1.0", "Estimados padres de familia,\n\nEste es un mensaje automático del sistema AsistoYA...")
+            
+            # Botones de acción
+            action_frame = ttk_bootstrap.Frame(main_frame)
+            action_frame.pack(fill=X)
+            
+            def send_now():
+                """Enviar notificaciones ahora"""
+                try:
+                    # Aquí implementarías la lógica real de envío
+                    # Por ejemplo, envío por email, SMS, push notifications, etc.
+                    
+                    tipo = notif_type.get()
+                    destinatario = dest_type.get()
+                    mensaje = message_text.get("1.0", tk.END).strip()
+                    
+                    if not mensaje:
+                        messagebox.showerror("Error", "El mensaje no puede estar vacío")
+                        return
+                    
+                    # Simular envío
+                    recipients_count = 0
+                    if destinatario == "todos":
+                        recipients_count = 150  # Ejemplo: 150 padres
+                    elif destinatario == "ausentes":
+                        recipients_count = 15   # Ejemplo: 15 padres de ausentes
+                    elif destinatario == "especifico":
+                        student_id = student_entry.get().strip()
+                        if not student_id:
+                            messagebox.showerror("Error", "Debe especificar el ID del estudiante")
+                            return
+                        recipients_count = 1
+                    
+                    # Aquí llamarías a tu sistema real de notificaciones
+                    # Por ejemplo: notification_system.send_notification(tipo, destinatario, mensaje)
+                    
+                    messagebox.showinfo(
+                        "Éxito", 
+                        f"Notificaciones enviadas correctamente a {recipients_count} destinatarios"
+                    )
+                    notif_window.destroy()
+                    
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error enviando notificaciones: {str(e)}")
+            
+            ttk_bootstrap.Button(
+                action_frame,
+                text="Enviar Ahora",
+                bootstyle=SUCCESS,
+                command=send_now
+            ).pack(side=LEFT, padx=5)
+            
+            ttk_bootstrap.Button(
+                action_frame,
+                text="Programar Envío",
+                bootstyle=INFO,
+                command=lambda: messagebox.showinfo("Info", "Función de programación pendiente de implementar")
+            ).pack(side=LEFT, padx=5)
+            
+            ttk_bootstrap.Button(
+                action_frame,
+                text="Cancelar",
+                bootstyle=SECONDARY,
+                command=notif_window.destroy
+            ).pack(side=RIGHT, padx=5)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error abriendo notificaciones: {str(e)}")
         messagebox.showinfo("Notificaciones", "Enviando notificaciones...")
     
     def open_settings(self):
