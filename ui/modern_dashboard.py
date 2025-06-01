@@ -17,6 +17,60 @@ import threading
 from typing import Dict, List, Optional
 
 class ModernDashboard:
+    def create_camera_panel(self):
+        """Crear panel de visualización y control de cámara"""
+        import cv2
+        from PIL import Image, ImageTk
+        camera_frame = ttk_bootstrap.LabelFrame(self.main_frame, text="Cámara en Vivo", bootstyle=INFO)
+        camera_frame.pack(fill=X, pady=(0, 10))
+
+        # Selector de cámara
+        cameras = self.face_system.camera_manager.get_available_cameras()
+        self.selected_camera = tk.IntVar(value=cameras[0] if cameras else 0)
+        ttk_bootstrap.Label(camera_frame, text="Seleccionar cámara:").pack(side=LEFT, padx=5)
+        self.camera_menu = ttk_bootstrap.Combobox(camera_frame, values=cameras, textvariable=self.selected_camera, width=5, state="readonly")
+        self.camera_menu.pack(side=LEFT, padx=5)
+        self.camera_menu.bind("<<ComboboxSelected>>", self.on_camera_selected)
+
+        # Botón para iniciar/detener cámara
+        self.camera_running = False
+        self.camera_btn = ttk_bootstrap.Button(camera_frame, text="Iniciar Cámara", bootstyle=SUCCESS, command=self.toggle_camera)
+        self.camera_btn.pack(side=LEFT, padx=5)
+
+        # Widget para mostrar la imagen
+        self.camera_label = ttk_bootstrap.Label(camera_frame)
+        self.camera_label.pack(side=LEFT, padx=10)
+
+    def on_camera_selected(self, event=None):
+        idx = self.selected_camera.get()
+        self.face_system.camera_manager.switch_camera(idx)
+
+    def toggle_camera(self):
+        if not self.camera_running:
+            if self.face_system.camera_manager.start_capture():
+                self.camera_running = True
+                self.camera_btn.config(text="Detener Cámara", bootstyle=DANGER)
+                self.update_camera_frame()
+            else:
+                messagebox.showerror("Cámara", "No se pudo iniciar la cámara seleccionada.")
+        else:
+            self.face_system.camera_manager.stop_capture()
+            self.camera_running = False
+            self.camera_btn.config(text="Iniciar Cámara", bootstyle=SUCCESS)
+            self.camera_label.config(image="")
+
+    def update_camera_frame(self):
+        if self.camera_running:
+            frame = self.face_system.camera_manager.get_frame()
+            if frame is not None:
+                import cv2
+                from PIL import Image, ImageTk
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(frame_rgb)
+                imgtk = ImageTk.PhotoImage(image=img.resize((320, 240)))
+                self.camera_label.imgtk = imgtk
+                self.camera_label.config(image=imgtk)
+            self.parent.after(30, self.update_camera_frame)
     """Dashboard empresarial moderno con métricas avanzadas"""
     
     def __init__(self, parent, auth_manager, firebase_config):
@@ -25,6 +79,9 @@ class ModernDashboard:
         self.firebase = firebase_config
         self.current_user = None
         self.current_token = None
+        # Integración real de reconocimiento facial
+        from face_recognition.recognition_system import FaceRecognitionSystem
+        self.face_system = FaceRecognitionSystem()
         
         # Configurar tema moderno
         self.style = ttk_bootstrap.Style(theme="superhero")  # Tema oscuro profesional
@@ -66,7 +123,8 @@ class ModernDashboard:
         
         # Panel de acciones rápidas
         self.create_quick_actions()
-        
+        # Panel de cámara
+        self.create_camera_panel()
         # Barra de estado
         self.create_status_bar()
     
@@ -343,46 +401,29 @@ class ModernDashboard:
         
         buttons_frame = ttk_bootstrap.Frame(actions_frame)
         buttons_frame.pack(fill=X, padx=10, pady=10)
-        
-        # Botones de acción
+          # Botones principales funcionales
         ttk_bootstrap.Button(
             buttons_frame,
-            text="🚀 Iniciar Reconocimiento",
+            text="Registrar Usuario/Rostro",
+            bootstyle=PRIMARY,
+            width=22,
+            command=self.register_face
+        ).pack(side=LEFT, padx=5)
+        
+        ttk_bootstrap.Button(
+            buttons_frame,
+            text="Iniciar Reconocimiento",
             bootstyle=SUCCESS,
-            width=20,
+            width=22,
             command=self.start_recognition
         ).pack(side=LEFT, padx=5)
         
         ttk_bootstrap.Button(
             buttons_frame,
-            text="📋 Exportar Reporte",
-            bootstyle=INFO,
-            width=20,
-            command=self.export_report
-        ).pack(side=LEFT, padx=5)
-        
-        ttk_bootstrap.Button(
-            buttons_frame,
-            text="👥 Gestionar Estudiantes",
-            bootstyle=PRIMARY,
-            width=20,
-            command=self.manage_students
-        ).pack(side=LEFT, padx=5)
-        
-        ttk_bootstrap.Button(
-            buttons_frame,
-            text="🔔 Enviar Notificaciones",
+            text="Enviar Notificaciones",
             bootstyle=WARNING,
-            width=20,
+            width=22,
             command=self.send_notifications
-        ).pack(side=LEFT, padx=5)
-        
-        ttk_bootstrap.Button(
-            buttons_frame,
-            text="⚙️ Configuración",
-            bootstyle=SECONDARY,
-            width=20,
-            command=self.open_settings
         ).pack(side=LEFT, padx=5)
     
     def create_status_bar(self):
@@ -483,23 +524,243 @@ class ModernDashboard:
         user_text = f"👤 {user['full_name']} ({user['role'].title()})"
         self.user_info_label.config(text=user_text)
     
-    # Métodos para acciones rápidas
-    def start_recognition(self):
-        """Iniciar reconocimiento facial"""
-        messagebox.showinfo("Acción", "🚀 Iniciando sistema de reconocimiento facial...")
+    # Métodos para acciones rápidas    def start_recognition(self):
+        """Iniciar reconocimiento facial real"""
+        try:
+            # Crear ventana de reconocimiento en tiempo real
+            recognition_window = tk.Toplevel(self.parent)
+            recognition_window.title("Reconocimiento Facial en Tiempo Real")
+            recognition_window.geometry("800x600")
+            recognition_window.grab_set()
+            
+            # Frame principal
+            main_frame = ttk_bootstrap.Frame(recognition_window, padding=20)
+            main_frame.pack(fill=BOTH, expand=True)
+            
+            # Título
+            title_label = ttk_bootstrap.Label(
+                main_frame,
+                text="Sistema de Reconocimiento Facial Activo",
+                font=("Segoe UI", 16, "bold"),
+                bootstyle=SUCCESS
+            )
+            title_label.pack(pady=(0, 20))
+            
+            # Frame para video
+            video_frame = ttk_bootstrap.LabelFrame(main_frame, text="Video en Vivo", bootstyle=INFO)
+            video_frame.pack(fill=BOTH, expand=True, pady=(0, 20))
+            
+            # Label para mostrar video
+            self.recognition_label = ttk_bootstrap.Label(video_frame)
+            self.recognition_label.pack(pady=10)
+            
+            # Frame de información
+            info_frame = ttk_bootstrap.Frame(main_frame)
+            info_frame.pack(fill=X, pady=(0, 20))
+            
+            self.recognition_status = ttk_bootstrap.Label(
+                info_frame,
+                text="Estado: Iniciando...",
+                font=("Segoe UI", 12),
+                bootstyle=WARNING
+            )
+            self.recognition_status.pack()
+            
+            # Inicializar reconocimiento
+            init_result = self.face_system.initialize()
+            if not init_result['success']:
+                messagebox.showerror("Error", f"Error inicializando: {', '.join(init_result['errors'])}")
+                recognition_window.destroy()
+                return
+            
+            # Iniciar reconocimiento
+            if self.face_system.start_recognition():
+                self.recognition_status.config(text="Estado: Reconocimiento activo", bootstyle=SUCCESS)
+                self.recognition_active = True
+                self.update_recognition_display(recognition_window)
+            else:
+                messagebox.showerror("Error", "No se pudo iniciar el reconocimiento")
+                recognition_window.destroy()
+                return
+            
+            # Botón para detener
+            def stop_recognition():
+                self.face_system.stop_recognition()
+                self.recognition_active = False
+                recognition_window.destroy()
+            
+            ttk_bootstrap.Button(
+                main_frame,
+                text="Detener Reconocimiento",
+                bootstyle=DANGER,
+                command=stop_recognition
+            ).pack()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error iniciando reconocimiento: {str(e)}")
+    
+    def update_recognition_display(self, window):
+        """Actualizar display de reconocimiento"""
+        if hasattr(self, 'recognition_active') and self.recognition_active:
+            frame = self.face_system.get_current_frame_with_detections()
+            if frame is not None:
+                import cv2
+                from PIL import Image, ImageTk
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(frame_rgb)
+                imgtk = ImageTk.PhotoImage(image=img.resize((640, 480)))
+                self.recognition_label.imgtk = imgtk
+                self.recognition_label.config(image=imgtk)
+            
+            # Programar siguiente actualización
+            window.after(30, lambda: self.update_recognition_display(window))
     
     def export_report(self):
-        """Exportar reporte"""
-        messagebox.showinfo("Acción", "📋 Exportando reporte de asistencia...")
+        """Exportar reporte (placeholder real)"""
+        # Aquí deberías llamar a la función real de exportación de reportes
+        messagebox.showinfo("Reporte", "Exportando reporte de asistencia...")
     
     def manage_students(self):
-        """Gestionar estudiantes"""
-        messagebox.showinfo("Acción", "👥 Abriendo gestión de estudiantes...")
+        """Gestionar estudiantes (placeholder real)"""
+        # Aquí deberías llamar a la función real de gestión de estudiantes
+        messagebox.showinfo("Estudiantes", "Abriendo gestión de estudiantes...")
     
     def send_notifications(self):
-        """Enviar notificaciones"""
-        messagebox.showinfo("Acción", "🔔 Enviando notificaciones...")
+        """Enviar notificaciones (placeholder real)"""
+        # Aquí deberías llamar a la función real de notificaciones
+        messagebox.showinfo("Notificaciones", "Enviando notificaciones...")
     
     def open_settings(self):
-        """Abrir configuración"""
-        messagebox.showinfo("Acción", "⚙️ Abriendo configuración del sistema...")
+        """Abrir configuración (placeholder real)"""
+        # Aquí deberías llamar a la función real de configuración
+        messagebox.showinfo("Configuración", "Abriendo configuración del sistema...")
+    
+    def register_face(self):
+        """Registrar rostro de un nuevo estudiante"""
+        try:
+            # Crear ventana de registro
+            register_window = tk.Toplevel(self.parent)
+            register_window.title("Registrar Nuevo Estudiante")
+            register_window.geometry("600x500")
+            register_window.grab_set()
+            
+            # Frame principal
+            main_frame = ttk_bootstrap.Frame(register_window, padding=20)
+            main_frame.pack(fill=BOTH, expand=True)
+            
+            # Título
+            title_label = ttk_bootstrap.Label(
+                main_frame, 
+                text="Registro de Nuevo Estudiante",
+                font=("Segoe UI", 16, "bold"),
+                bootstyle=PRIMARY
+            )
+            title_label.pack(pady=(0, 20))
+            
+            # Campos de información
+            info_frame = ttk_bootstrap.Frame(main_frame)
+            info_frame.pack(fill=X, pady=(0, 20))
+            
+            ttk_bootstrap.Label(info_frame, text="Nombre completo:").pack(anchor=W)
+            name_entry = ttk_bootstrap.Entry(info_frame, width=50)
+            name_entry.pack(fill=X, pady=(5, 10))
+            
+            ttk_bootstrap.Label(info_frame, text="ID del estudiante:").pack(anchor=W)
+            id_entry = ttk_bootstrap.Entry(info_frame, width=50)
+            id_entry.pack(fill=X, pady=(5, 10))
+            
+            ttk_bootstrap.Label(info_frame, text="Curso/Grado:").pack(anchor=W)
+            course_entry = ttk_bootstrap.Entry(info_frame, width=50)
+            course_entry.pack(fill=X, pady=(5, 10))
+            
+            # Frame para la cámara
+            camera_frame = ttk_bootstrap.LabelFrame(main_frame, text="Captura de Rostro", bootstyle=INFO)
+            camera_frame.pack(fill=BOTH, expand=True, pady=(0, 20))
+            
+            # Label para mostrar la imagen
+            self.capture_label = ttk_bootstrap.Label(camera_frame)
+            self.capture_label.pack(pady=10)
+            
+            # Botones de acción
+            action_frame = ttk_bootstrap.Frame(main_frame)
+            action_frame.pack(fill=X)
+            
+            def capture_photo():
+                """Capturar foto del estudiante"""
+                if not self.face_system.camera_manager.camera_available:
+                    if not self.face_system.camera_manager.initialize_camera():
+                        messagebox.showerror("Error", "No se pudo acceder a la cámara")
+                        return
+                
+                # Capturar frame
+                frame = self.face_system.camera_manager.capture_single_frame()
+                if frame is not None:
+                    # Mostrar imagen capturada
+                    import cv2
+                    from PIL import Image, ImageTk
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    img = Image.fromarray(frame_rgb)
+                    imgtk = ImageTk.PhotoImage(image=img.resize((300, 225)))
+                    self.capture_label.imgtk = imgtk
+                    self.capture_label.config(image=imgtk)
+                    
+                    # Guardar frame para registro
+                    self.captured_frame = frame
+                    messagebox.showinfo("Éxito", "Foto capturada correctamente")
+                else:
+                    messagebox.showerror("Error", "No se pudo capturar la foto")
+            
+            def save_student():
+                """Guardar estudiante con rostro"""
+                name = name_entry.get().strip()
+                student_id = id_entry.get().strip()
+                course = course_entry.get().strip()
+                
+                if not name or not student_id:
+                    messagebox.showerror("Error", "Nombre e ID son obligatorios")
+                    return
+                
+                if not hasattr(self, 'captured_frame'):
+                    messagebox.showerror("Error", "Debe capturar una foto primero")
+                    return
+                
+                try:
+                    # Entrenar el reconocedor con la nueva cara
+                    success = self.face_system.face_recognizer.add_person(
+                        name=name,
+                        student_id=student_id,
+                        face_image=self.captured_frame
+                    )
+                    
+                    if success:
+                        messagebox.showinfo("Éxito", f"Estudiante {name} registrado correctamente")
+                        register_window.destroy()
+                    else:
+                        messagebox.showerror("Error", "No se pudo registrar el rostro")
+                        
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error registrando estudiante: {str(e)}")
+            
+            ttk_bootstrap.Button(
+                action_frame,
+                text="Capturar Foto",
+                bootstyle=INFO,
+                command=capture_photo
+            ).pack(side=LEFT, padx=5)
+            
+            ttk_bootstrap.Button(
+                action_frame,
+                text="Guardar Estudiante",
+                bootstyle=SUCCESS,
+                command=save_student
+            ).pack(side=LEFT, padx=5)
+            
+            ttk_bootstrap.Button(
+                action_frame,
+                text="Cancelar",
+                bootstyle=SECONDARY,
+                command=register_window.destroy
+            ).pack(side=RIGHT, padx=5)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Error abriendo registro: {str(e)}")

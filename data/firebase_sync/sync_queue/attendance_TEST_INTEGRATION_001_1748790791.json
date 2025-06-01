@@ -1,0 +1,19 @@
+{
+  "collection": "attendance",
+  "record_id": "TEST_INTEGRATION_001_1748790791",
+  "data": {
+    "student_id": "TEST_INTEGRATION_001",
+    "student_name": "Estudiante Test Integración",
+    "timestamp": "2025-06-01T11:13:11.171667",
+    "date": "2025-06-01",
+    "time": "11:13:11",
+    "status": "present",
+    "method": "face_recognition",
+    "classroom": "Aula Integración",
+    "grade": "11vo",
+    "confidence": 0.92,
+    "detection_method": "face_recognition_test"
+  },
+  "timestamp": "2025-06-01T11:13:11.176239",
+  "synced": false
+}

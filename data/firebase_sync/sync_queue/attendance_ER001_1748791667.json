@@ -1,0 +1,19 @@
+{
+  "collection": "attendance",
+  "record_id": "ER001_1748791667",
+  "data": {
+    "student_id": "ER001",
+    "student_name": "Enmanuel Reynoso",
+    "timestamp": "2025-06-01T11:27:47.764404",
+    "date": "2025-06-01",
+    "time": "11:27:47",
+    "status": "present",
+    "method": "face_recognition",
+    "classroom": "Aula 301",
+    "grade": "12vo",
+    "confidence": 0.94,
+    "detection_method": "face_recognition_opencv"
+  },
+  "timestamp": "2025-06-01T11:27:47.766406",
+  "synced": false
+}
